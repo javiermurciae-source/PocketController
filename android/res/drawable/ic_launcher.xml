@@ -1,0 +1,30 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#0D1117"
+        android:pathData="M0,0h108v108h-108z"/>
+    <!-- Gamepad body -->
+    <path
+        android:fillColor="#00E5FF"
+        android:pathData="M78,34H30C20.06,34 12,42.06 12,52c0,8.28 5.62,15.25 13.25,17.29L33,63h42l7.75,6.29C90.38,67.25 96,60.28 96,52c0,-9.94 -8.06,-18 -18,-18z"/>
+    <!-- D-pad -->
+    <path
+        android:fillColor="#0D1117"
+        android:pathData="M29,44h6v4h-6z M29,52h6v4h-6z M25,48h4v4h-4z M35,48h4v4h-4z M29,48h6v4h-6z"/>
+    <!-- Action buttons -->
+    <path
+        android:fillColor="#FF007F"
+        android:pathData="M79,46m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0"/>
+    <path
+        android:fillColor="#00FF66"
+        android:pathData="M73,52m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0"/>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M85,52m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0"/>
+    <path
+        android:fillColor="#00E5FF"
+        android:pathData="M79,58m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0"/>
+</vector>

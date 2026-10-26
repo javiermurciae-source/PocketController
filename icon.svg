@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="padGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#0284c7" stop-opacity="0.1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Base with subtle border -->
+  <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#bgGrad)" stroke="#334155" stroke-width="2"/>
+
+  <!-- Phone frame subtly in background -->
+  <rect x="22" y="22" width="84" height="84" rx="18" fill="none" stroke="#475569" stroke-width="1.5" stroke-dasharray="4,4"/>
+
+  <!-- Gamepad Body -->
+  <path d="M 38 46 C 30 46, 24 54, 24 68 C 24 82, 32 94, 44 94 C 50 94, 56 86, 64 86 C 72 86, 78 94, 84 94 C 96 94, 104 82, 104 68 C 104 54, 98 46, 90 46 C 80 46, 74 52, 64 52 C 54 52, 48 46, 38 46 Z" 
+        fill="#1e293b" stroke="#38bdf8" stroke-width="2.5"/>
+
+  <!-- D-Pad Left -->
+  <path d="M 40 60 L 44 60 L 44 56 L 48 56 L 48 60 L 52 60 L 52 64 L 48 64 L 48 68 L 44 68 L 44 64 L 40 64 Z" fill="#94a3b8"/>
+
+  <!-- Right ABXY Buttons -->
+  <!-- Y (Top) -->
+  <circle cx="84" cy="58" r="3" fill="#eab308"/>
+  <!-- X (Left) -->
+  <circle cx="79" cy="63" r="3" fill="#3b82f6"/>
+  <!-- B (Right) -->
+  <circle cx="89" cy="63" r="3" fill="#ef4444"/>
+  <!-- A (Bottom) -->
+  <circle cx="84" cy="68" r="3" fill="#10b981"/>
+
+  <!-- Left Stick -->
+  <circle cx="50" cy="76" r="6" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>
+  <circle cx="50" cy="76" r="2.5" fill="#38bdf8"/>
+
+  <!-- Right Stick -->
+  <circle cx="78" cy="76" r="6" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>
+  <circle cx="78" cy="76" r="2.5" fill="#38bdf8"/>
+
+  <!-- Center Guide / Status Light -->
+  <circle cx="64" cy="62" r="3.5" fill="#2ed573"/>
+</svg>

@@ -1,0 +1,2067 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Pocket Controller Pro - Switch Custom</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #090b10;
+      color: #f1f5f9;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* BARRA SUPERIOR */
+    header {
+      height: 44px;
+      background: #11141e;
+      border-bottom: 1px solid #1e2436;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      z-index: 1000;
+      flex-shrink: 0;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ef4444;
+      box-shadow: 0 0 8px #ef4444;
+      transition: all 0.3s ease;
+    }
+
+    .status-dot.connected {
+      background: #10b981;
+      box-shadow: 0 0 10px #10b981;
+    }
+
+    .top-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-tool {
+      background: #1b2030;
+      border: 1px solid #2a334d;
+      color: #cbd5e1;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+    }
+
+    .btn-tool.active {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #38bdf8;
+      box-shadow: 0 0 8px rgba(2, 132, 199, 0.5);
+    }
+
+    .btn-tool.edit-btn {
+      background: #f59e0b;
+      color: #000;
+      border-color: #fbbf24;
+    }
+
+    .btn-tool.edit-btn.active {
+      background: #10b981;
+      color: #fff;
+      border-color: #34d399;
+    }
+
+    .profile-select {
+      background: #1b2030;
+      border: 1px solid #2a334d;
+      color: #cbd5e1;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      outline: none;
+    }
+
+    /* ÁREA DEL MANDO (VIEWPORT) */
+    main {
+      flex: 1;
+      position: relative;
+      width: 100vw;
+      height: calc(100vh - 44px);
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 50%, #10131d 0%, #07090d 100%);
+    }
+
+    /* MODO EDICIÓN VISUAL */
+    body.edit-mode .draggable-group,
+    body.edit-mode .custom-widget {
+      outline: 2px dashed #f59e0b !important;
+      outline-offset: 4px;
+      cursor: move !important;
+    }
+
+    body.edit-mode .draggable-group.selected,
+    body.edit-mode .custom-widget.selected {
+      outline: 2px solid #38bdf8 !important;
+      outline-offset: 4px;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+    }
+
+    /* GRUPOS DE CONTROLES POR DEFECTO */
+    .draggable-group {
+      position: absolute;
+      transition: outline 0.15s ease;
+      touch-action: none;
+      transform-origin: center center;
+    }
+
+    /* GATILLOS Y HOMBROS */
+    .shoulder-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .shoulder-btn {
+      min-width: 80px;
+      width: auto;
+      padding: 0 14px;
+      height: 48px;
+      background: #191e2b;
+      border: 2px solid #2a334d;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 800;
+      color: #94a3b8;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      white-space: nowrap;
+    }
+
+    .shoulder-btn.trigger {
+      background: #141724;
+      border-color: #3b4566;
+      color: #38bdf8;
+    }
+
+    .shoulder-btn.active {
+      background: #0284c7 !important;
+      color: #ffffff !important;
+      border-color: #38bdf8 !important;
+      box-shadow: 0 0 14px rgba(2, 132, 199, 0.7);
+    }
+
+    /* STICKS */
+    .stick-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stick-container {
+      width: 140px;
+      height: 140px;
+      background: #12151f;
+      border: 2px solid #222738;
+      border-radius: 50%;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.8);
+    }
+
+    .stick-knob {
+      width: 66px;
+      height: 66px;
+      background: radial-gradient(circle at 35% 35%, #3b4259, #171a24);
+      border: 2px solid #4a5472;
+      border-radius: 50%;
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 800;
+      color: #64748b;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.7);
+      pointer-events: none;
+    }
+
+    .stick-click-btn {
+      background: #1b1e28;
+      border: 1px solid #2d3345;
+      border-radius: 6px;
+      color: #94a3b8;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 12px;
+      user-select: none;
+    }
+
+    .stick-click-btn.active {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #38bdf8;
+    }
+
+    /* D-PAD (CRUCETA) */
+    .dpad-container {
+      width: 140px;
+      height: 140px;
+      position: relative;
+    }
+
+    .dpad-btn {
+      position: absolute;
+      background: #1b1f2c;
+      border: 2px solid #2d344a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #94a3b8;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+
+    .dpad-btn.active {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #38bdf8;
+    }
+
+    .dpad-up { top: 0; left: 47px; width: 46px; height: 50px; border-radius: 8px 8px 0 0; }
+    .dpad-down { bottom: 0; left: 47px; width: 46px; height: 50px; border-radius: 0 0 8px 8px; }
+    .dpad-left { top: 47px; left: 0; width: 50px; height: 46px; border-radius: 8px 0 0 8px; }
+    .dpad-right { top: 47px; right: 0; width: 50px; height: 46px; border-radius: 0 8px 8px 0; }
+    .dpad-center {
+      position: absolute;
+      top: 47px; left: 47px;
+      width: 46px; height: 46px;
+      background: #1b1f2c;
+      pointer-events: none;
+    }
+
+    /* BOTONES FRONTALES (ABXY) */
+    .abxy-container {
+      width: 156px;
+      height: 156px;
+      position: relative;
+    }
+
+    .abxy-btn {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: #1a1e2b;
+      border: 2px solid #2e364d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 21px;
+      font-weight: 900;
+      color: #cbd5e1;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+    }
+
+    .btn-x { top: 0; left: 53px; }
+    .btn-a { top: 53px; right: 0; }
+    .btn-b { bottom: 0; left: 53px; }
+    .btn-y { top: 53px; left: 0; }
+
+    .abxy-btn.active {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #38bdf8;
+      box-shadow: 0 0 14px rgba(2, 132, 199, 0.7);
+    }
+
+    /* BOTONES CENTRALES (-, +, Captura, Home) */
+    .center-cluster {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      background: rgba(18, 21, 31, 0.8);
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid #202638;
+      backdrop-filter: blur(4px);
+    }
+
+    .menu-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #191c28;
+      border: 1px solid #2d3345;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 800;
+      color: #94a3b8;
+    }
+
+    .menu-btn.active {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #38bdf8;
+    }
+
+    /* BOTONES Y MACROS PERSONALIZADOS */
+    .custom-widget {
+      position: absolute;
+      z-index: 100;
+      transform-origin: center center;
+      /* Sin esto, en Android el gesto de deslizar cancela el touch y el macro "no responde" */
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .custom-btn {
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      background: #1e2436;
+      border: 2px solid #3b4766;
+      color: #f1f5f9;
+      border-radius: 12px;
+      padding: 10px 18px;
+      font-weight: 800;
+      font-size: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      min-width: 60px;
+      min-height: 50px;
+    }
+
+    .custom-btn.active {
+      background: #0284c7 !important;
+      border-color: #38bdf8 !important;
+      color: #fff !important;
+      box-shadow: 0 0 15px rgba(2, 132, 199, 0.7);
+    }
+
+    .custom-btn.macro-turbo { border-color: #e11d48; color: #fda4af; }
+    .custom-btn.macro-toggle { border-color: #10b981; color: #a7f3d0; }
+    .custom-btn.macro-combo { border-color: #8b5cf6; color: #ddd6fe; }
+    .custom-btn.macro-seq { border-color: #f59e0b; color: #fde68a; }
+
+    .custom-btn-badge {
+      font-size: 9px;
+      text-transform: uppercase;
+      opacity: 0.8;
+      letter-spacing: 0.5px;
+    }
+
+    /* BARRA FLOTANTE DE EDICIÓN */
+    #editToolbar {
+      position: fixed;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #111420;
+      border: 1px solid #2a334d;
+      border-radius: 12px;
+      padding: 8px 18px;
+      display: none;
+      align-items: center;
+      gap: 15px;
+      z-index: 2000;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.8);
+    }
+
+    body.edit-mode #editToolbar {
+      display: flex;
+    }
+
+    /* MODAL DE CREACIÓN DE BOTONES / MACROS */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(5px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 3000;
+    }
+
+    .modal-card {
+      width: 90%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      background: #121624;
+      border: 1px solid #2a334d;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 12px 35px rgba(0,0,0,0.9);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #22293d;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #38bdf8;
+    }
+
+    .modal-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 16px;
+      background: #0a0c14;
+      padding: 4px;
+      border-radius: 8px;
+    }
+
+    .modal-tab {
+      flex: 1;
+      padding: 8px 4px;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-weight: 700;
+      font-size: 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .modal-tab.active {
+      background: #0284c7;
+      color: #fff;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #cbd5e1;
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      background: #181d2e;
+      border: 1px solid #2d3752;
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .btn-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .choice-btn {
+      background: #181d2e;
+      border: 1px solid #2d3752;
+      border-radius: 6px;
+      color: #cbd5e1;
+      padding: 8px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .choice-btn.selected {
+      background: #0284c7;
+      color: #fff;
+      border-color: #38bdf8;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+      border-top: 1px solid #22293d;
+      padding-top: 14px;
+    }
+
+    .btn-primary {
+      background: #0284c7;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .btn-secondary {
+      background: #22283a;
+      color: #94a3b8;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* INSIGNIA DE JUGADOR MULTIPLAYER */
+    .player-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      border: 1px solid rgba(255,255,255,0.2);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+    .player-badge:hover {
+      filter: brightness(1.2);
+      transform: scale(1.05);
+    }
+    .player-badge.player-p1 {
+      background: #0284c7;
+      color: #fff;
+      border-color: #38bdf8;
+      box-shadow: 0 0 10px rgba(2, 132, 199, 0.6);
+    }
+    .player-badge.player-p2 {
+      background: #dc2626;
+      color: #fff;
+      border-color: #f87171;
+      box-shadow: 0 0 10px rgba(220, 38, 38, 0.6);
+    }
+    .player-badge.player-p3 {
+      background: #16a34a;
+      color: #fff;
+      border-color: #4ade80;
+      box-shadow: 0 0 10px rgba(22, 163, 74, 0.6);
+    }
+    .player-badge.player-p4 {
+      background: #d97706;
+      color: #fff;
+      border-color: #fbbf24;
+      box-shadow: 0 0 10px rgba(217, 119, 6, 0.6);
+    }
+
+    /* MODAL DE SELECCIÓN DE JUGADOR */
+    .player-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .player-card {
+      background: #181d2e;
+      border: 2px solid #2d3752;
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .player-card:hover {
+      border-color: #38bdf8;
+      transform: translateY(-2px);
+    }
+    .player-card.active {
+      border-color: #38bdf8;
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.4);
+      background: #1e263d;
+    }
+    .player-card .p-num {
+      font-size: 24px;
+      font-weight: 900;
+    }
+    .player-card .p-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .player-card.p1 .p-num { color: #38bdf8; }
+    .player-card.p2 .p-num { color: #f87171; }
+    .player-card.p3 .p-num { color: #4ade80; }
+    .player-card.p4 .p-num { color: #fbbf24; }
+
+    /* TOAST DE NOTIFICACIONES */
+    #toastContainer {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+      background: #182030;
+      color: #f1f5f9;
+      border: 1px solid #38bdf8;
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: toastFade 2.6s forwards;
+    }
+    .toast.toast-error {
+      border-color: #ef4444;
+      color: #fca5a5;
+    }
+    @keyframes toastFade {
+      0% { opacity: 0; transform: translateY(15px); }
+      12% { opacity: 1; transform: translateY(0); }
+      80% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-10px); }
+    }
+  </style>
+</head>
+<body class="play-mode">
+
+  <!-- HEADER -->
+  <header>
+    <div class="status-badge">
+      <div id="statusDot" class="status-dot"></div>
+      <span id="statusText">Conectando...</span>
+      <button id="playerBadge" class="player-badge player-p1" title="Cambiar Jugador (P1-P4)">🎮 P1</button>
+    </div>
+
+    <div class="top-controls">
+      <select id="profileSelect" class="profile-select">
+        <option value="default">🎮 Switch Pro</option>
+      </select>
+      <button id="btnNewProfile" class="btn-tool" title="Nuevo Perfil Personalizado">➕ Perfil</button>
+      <button id="btnExportProfile" class="btn-tool" title="Exportar Perfil a Archivo JSON">📥 Exportar</button>
+      <button id="btnImportProfile" class="btn-tool" title="Importar Perfil desde Archivo JSON">📤 Importar</button>
+      <input type="file" id="fileImportProfile" accept=".json,application/json" style="display:none;">
+      <button id="btnDeleteProfile" class="btn-tool" style="display:none; color:#ef4444; border-color:#ef4444;" title="Eliminar Perfil Actual">🗑️</button>
+      <button id="btnToggleEdit" class="btn-tool edit-btn">🛠️ Modo Edición</button>
+      <button id="btnUnhideAll" class="btn-tool" style="display:none;" title="Mostrar Controles Ocultos">👁️ Mostrar Todo</button>
+      <button id="btnScanQr" class="btn-tool" style="color:#38bdf8; border-color:#38bdf8;" title="Cambiar Servidor / Escanear Código QR">📷 QR</button>
+      <a href="PocketController.apk" download class="btn-tool" style="text-decoration:none; display:inline-flex; align-items:center; gap:4px; color:#10b981; border-color:#10b981;" title="Descargar APK Nativa (Soporte Físico Botones de Volumen)">📲 APK</a>
+      <button id="btnFullscreen" class="btn-tool">⛶</button>
+    </div>
+  </header>
+
+  <!-- VIEWPORT DEL MANDO -->
+  <main id="gamepadCanvas">
+
+    <!-- GRUPO: GATILLOS IZQUIERDOS (ZL / L) -->
+    <div id="grp_shoulder_left" class="draggable-group shoulder-group" style="top: 20px; left: 30px;">
+      <div class="shoulder-btn trigger" data-btn="ZL">ZL</div>
+      <div class="shoulder-btn" data-btn="L">L</div>
+    </div>
+
+    <!-- GRUPO: STICK IZQUIERDO CON L3 -->
+    <div id="grp_stick_left" class="draggable-group stick-col" style="top: 90px; left: 35px;">
+      <div id="leftStick" class="stick-container">
+        <div id="leftKnob" class="stick-knob">L</div>
+      </div>
+      <div class="stick-click-btn" data-btn="L3">L3 (Click)</div>
+    </div>
+
+    <!-- GRUPO: CRUCETA (D-PAD) -->
+    <div id="grp_dpad" class="draggable-group dpad-container" style="top: 90px; left: 200px;">
+      <div class="dpad-btn dpad-up" data-btn="UP">▲</div>
+      <div class="dpad-btn dpad-left" data-btn="LEFT">◀</div>
+      <div class="dpad-center"></div>
+      <div class="dpad-btn dpad-right" data-btn="RIGHT">▶</div>
+      <div class="dpad-btn dpad-down" data-btn="DOWN">▼</div>
+    </div>
+
+    <!-- GRUPO: CENTRO (-, +, Captura, Home) -->
+    <div id="grp_center" class="draggable-group center-cluster" style="top: 20px; left: calc(50% - 110px);">
+      <div class="menu-btn" data-btn="MINUS">-</div>
+      <div class="menu-btn" data-btn="CAPTURE">○</div>
+      <div class="menu-btn" data-btn="HOME">🏠</div>
+      <div class="menu-btn" data-btn="PLUS">+</div>
+    </div>
+
+    <!-- GRUPO: GATILLOS DERECHOS (R / ZR) -->
+    <div id="grp_shoulder_right" class="draggable-group shoulder-group" style="top: 20px; right: 30px;">
+      <div class="shoulder-btn" data-btn="R">R</div>
+      <div class="shoulder-btn trigger" data-btn="ZR">ZR</div>
+    </div>
+
+    <!-- GRUPO: BOTONES ABXY (Oculto por defecto a petición) -->
+    <div id="grp_abxy" class="draggable-group abxy-container" style="top: 90px; right: 200px; display: none;">
+      <div class="abxy-btn btn-x" data-btn="X">X</div>
+      <div class="abxy-btn btn-a" data-btn="A">A</div>
+      <div class="abxy-btn btn-b" data-btn="B">B</div>
+      <div class="abxy-btn btn-y" data-btn="Y">Y</div>
+    </div>
+
+    <!-- GRUPO: STICK DERECHO CON R3 -->
+    <div id="grp_stick_right" class="draggable-group stick-col" style="top: 90px; right: 35px;">
+      <div id="rightStick" class="stick-container">
+        <div id="rightKnob" class="stick-knob">R</div>
+      </div>
+      <div class="stick-click-btn" data-btn="R3">R3 (Click)</div>
+    </div>
+
+  </main>
+
+  <!-- BARRA FLOTANTE DE EDICIÓN -->
+  <div id="editToolbar">
+    <span style="font-size: 13px; font-weight: 700; color: #f59e0b;">Seleccionado:</span>
+    <label style="display:flex; align-items:center; gap: 6px; font-size:12px;">
+      Tamaño:
+      <input type="range" id="scaleSlider" min="60" max="160" value="100" style="width: 110px;">
+      <span id="scaleVal">100%</span>
+    </label>
+    <button id="btnDeleteSelected" class="btn-tool" style="display:none; color: #ef4444; border-color: #ef4444;">🗑️ Eliminar</button>
+    <button id="btnResetLayout" class="btn-tool" style="display:none;" title="Restaurar posiciones y tamaños originales">🔄 Restaurar Layout</button>
+    <button id="btnDeselect" class="btn-tool">✖ Listo</button>
+  </div>
+
+  <!-- MODAL: AÑADIR BOTÓN O MACRO -->
+  <div id="modalAdd" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">Añadir Botón o Macro</div>
+        <button id="btnCloseModal" style="background:none; border:none; color:#94a3b8; font-size:20px; cursor:pointer;">✕</button>
+      </div>
+
+      <div class="modal-tabs">
+        <button class="modal-tab active" data-tab="tab-simple">Simple</button>
+        <button class="modal-tab" data-tab="tab-combo">Combo</button>
+        <button class="modal-tab" data-tab="tab-turbo">Turbo</button>
+        <button class="modal-tab" data-tab="tab-toggle">Toggle (Fijo)</button>
+      </div>
+
+      <!-- FORMULARIO: SIMPLE -->
+      <div id="tab-simple" class="tab-content">
+        <div class="form-group">
+          <label class="form-label">Nombre en pantalla:</label>
+          <input type="text" id="simpleName" class="form-input" placeholder="Ej: A Extra, Salto, etc.">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Botón asignado:</label>
+          <div class="btn-grid" id="simpleBtnGrid">
+            <!-- Botones a elegir -->
+          </div>
+        </div>
+      </div>
+
+      <!-- FORMULARIO: COMBO SIMULTÁNEO -->
+      <div id="tab-combo" class="tab-content" style="display:none;">
+        <div class="form-group">
+          <label class="form-label">Nombre del combo:</label>
+          <input type="text" id="comboName" class="form-input" placeholder="Ej: ZL + ZR, L + R, X + A">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Selecciona botones a presionar juntos:</label>
+          <div class="btn-grid" id="comboBtnGrid">
+            <!-- Checkbox buttons -->
+          </div>
+        </div>
+      </div>
+
+      <!-- FORMULARIO: TURBO / RÁFAGA -->
+      <div id="tab-turbo" class="tab-content" style="display:none;">
+        <div class="form-group">
+          <label class="form-label">Nombre del turbo:</label>
+          <input type="text" id="turboName" class="form-input" placeholder="Ej: Turbo A, Ráfaga Y">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Botón a repetir:</label>
+          <div class="btn-grid" id="turboBtnGrid">
+            <!-- Botón -->
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Velocidad de repetición:</label>
+          <select id="turboSpeed" class="form-select">
+            <option value="80">Rápida (12 pulsaciones/segundo)</option>
+            <option value="50" selected>Extrema (20 pulsaciones/segundo)</option>
+            <option value="120">Media (8 pulsaciones/segundo)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- FORMULARIO: TOGGLE / MANOS LIBRES -->
+      <div id="tab-toggle" class="tab-content" style="display:none;">
+        <div class="form-group">
+          <label class="form-label">Nombre:</label>
+          <input type="text" id="toggleName" class="form-input" placeholder="Ej: Auto-Correr B, Fijar ZL">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Botón a mantener presionado:</label>
+          <div class="btn-grid" id="toggleBtnGrid">
+            <!-- Botón -->
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="btnCancelModal" class="btn-secondary">Cancelar</button>
+        <button id="btnSaveWidget" class="btn-primary">Crear Botón</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SELECCIÓN DE JUGADOR / MULTIPLAYER -->
+  <div id="modalPlayer" class="modal-overlay">
+    <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-header">
+        <div class="modal-title">🎮 Seleccionar Jugador (Mando)</div>
+        <button id="btnClosePlayerModal" style="background:none; border:none; color:#94a3b8; font-size:20px; cursor:pointer;">✕</button>
+      </div>
+      <p style="font-size: 13px; color: #94a3b8; line-height: 1.4;">
+        Conecta hasta 4 celulares simultáneos en tu red local. Cada celular actúa como un mando independiente en Linux (UInput).
+      </p>
+
+      <div class="player-grid">
+        <div class="player-card p1" data-slot="1">
+          <div class="p-num">P1</div>
+          <div class="p-label">Jugador 1 (Azul)</div>
+        </div>
+        <div class="player-card p2" data-slot="2">
+          <div class="p-num">P2</div>
+          <div class="p-label">Jugador 2 (Rojo)</div>
+        </div>
+        <div class="player-card p3" data-slot="3">
+          <div class="p-num">P3</div>
+          <div class="p-label">Jugador 3 (Verde)</div>
+        </div>
+        <div class="player-card p4" data-slot="4">
+          <div class="p-num">P4</div>
+          <div class="p-label">Jugador 4 (Amarillo)</div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="margin-top: 10px;">
+        <button id="btnCancelPlayerModal" class="btn-secondary" style="width: 100%;">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENEDOR DE NOTIFICACIONES TOAST -->
+  <div id="toastContainer"></div>
+
+  <script>
+    // --- BOTONES DISPONIBLES EN EL SISTEMA ---
+    const ALL_BUTTONS = ['A', 'B', 'X', 'Y', 'L', 'R', 'ZL', 'ZR', 'L3', 'R3', 'PLUS', 'MINUS', 'HOME'];
+
+    // --- ESTADO INTERNO DEL CONTROL ---
+    const gamepad = {
+      buttons: {},
+      leftStick: { x: 0, y: 0 },
+      rightStick: { x: 0, y: 0 },
+      hat: { x: 0, y: 0 }
+    };
+
+    let isEditMode = false;
+    let selectedElement = null;
+    let activeProfile = 'default';
+
+    // Limpieza de macros activas (turbo/hold) para que nunca quede un botón "trabado"
+    const WIDGET_CLEANUPS = {};
+    // Detiene todas las macros en curso pero mantiene sus registros (los widgets siguen en pantalla)
+    function stopAllWidgets() {
+      Object.keys(WIDGET_CLEANUPS).forEach(id => {
+        try { WIDGET_CLEANUPS[id](); } catch (e) {}
+      });
+    }
+    // Detiene y olvida una macro concreta (al borrar el widget o recargar el perfil)
+    function removeWidgetCleanup(id) {
+      if (!id || !WIDGET_CLEANUPS[id]) return;
+      try { WIDGET_CLEANUPS[id](); } catch (e) {}
+      delete WIDGET_CLEANUPS[id];
+    }
+
+    // --- PRESETS DE FÁBRICA ---
+    const FACTORY_PRESETS = {
+      default: {
+        name: '🎮 Switch Pro',
+        layoutType: 'switch',
+        elements: {
+          grp_abxy: { hidden: false, left: '', top: '', right: '', bottom: '', scale: '1.0' },
+          grp_shoulder_left: { hidden: false, left: '30px', top: '20px', scale: '1.0' },
+          grp_shoulder_right: { hidden: false, right: '30px', top: '20px', scale: '1.0' },
+          grp_stick_left: { hidden: false, left: '35px', top: '90px', scale: '1.0' },
+          grp_stick_right: { hidden: false, right: '35px', top: '90px', scale: '1.0' },
+          grp_dpad: { hidden: false, left: '200px', top: '90px', scale: '1.0' },
+          grp_center: { hidden: false, left: 'calc(50% - 110px)', top: '20px', scale: '1.0' }
+        },
+        customButtons: []
+      },
+      preset_mariokart: {
+        name: '🏎️ Mario Kart Pro',
+        layoutType: 'mariokart',
+        elements: {
+          grp_abxy: { hidden: false, left: '', top: '75px', right: '40px', bottom: '', scale: '1.25' },
+          grp_shoulder_left: { hidden: false, left: '35px', top: '15px', scale: '1.2' },
+          grp_shoulder_right: { hidden: false, right: '35px', top: '15px', scale: '1.2' },
+          grp_stick_left: { hidden: false, left: '45px', top: '95px', scale: '1.25' },
+          grp_stick_right: { hidden: true, right: '35px', top: '90px', scale: '1.0' },
+          grp_dpad: { hidden: true, left: '200px', top: '90px', scale: '1.0' },
+          grp_center: { hidden: false, left: 'calc(50% - 35px)', top: '15px', scale: '1.0' }
+        },
+        customButtons: []
+      },
+      preset_xbox: {
+        name: '🎮 Xbox Wireless',
+        layoutType: 'xbox',
+        elements: {
+          grp_abxy: { hidden: false, left: '', top: '90px', right: '200px', bottom: '', scale: '1.05' },
+          grp_shoulder_left: { hidden: false, left: '30px', top: '20px', scale: '1.0' },
+          grp_shoulder_right: { hidden: false, right: '30px', top: '20px', scale: '1.0' },
+          grp_stick_left: { hidden: false, left: '35px', top: '90px', scale: '1.05' },
+          grp_stick_right: { hidden: false, right: '35px', top: '120px', scale: '1.0' },
+          grp_dpad: { hidden: false, left: '200px', top: '120px', scale: '0.95' },
+          grp_center: { hidden: false, left: 'calc(50% - 110px)', top: '20px', scale: '1.0' }
+        },
+        customButtons: []
+      },
+      preset_playstation: {
+        name: '🎮 PlayStation DualShock',
+        layoutType: 'playstation',
+        elements: {
+          grp_abxy: { hidden: false, left: '', top: '90px', right: '200px', bottom: '', scale: '1.0' },
+          grp_shoulder_left: { hidden: false, left: '30px', top: '20px', scale: '1.0' },
+          grp_shoulder_right: { hidden: false, right: '30px', top: '20px', scale: '1.0' },
+          grp_stick_left: { hidden: false, left: '200px', top: '120px', scale: '1.0' },
+          grp_stick_right: { hidden: false, right: '200px', top: '120px', scale: '1.0' },
+          grp_dpad: { hidden: false, left: '35px', top: '90px', scale: '1.0' },
+          grp_center: { hidden: false, left: 'calc(50% - 110px)', top: '20px', scale: '1.0' }
+        },
+        customButtons: []
+      },
+      preset_arcade: {
+        name: '🥊 Arcade Fighting (6-Botones)',
+        layoutType: 'xbox',
+        elements: {
+          grp_abxy: { hidden: false, left: 'calc(100% - 250px)', top: '90px', scale: '1.05' },
+          grp_shoulder_left: { hidden: false, left: '30px', top: '20px', scale: '1.0' },
+          grp_shoulder_right: { hidden: false, right: '30px', top: '20px', scale: '1.0' },
+          grp_stick_left: { hidden: false, left: '35px', top: '90px', scale: '1.1' },
+          grp_stick_right: { hidden: true, right: '35px', top: '90px', scale: '1.0' },
+          grp_dpad: { hidden: false, left: '210px', top: '90px', scale: '1.1' },
+          grp_center: { hidden: false, left: 'calc(50% - 110px)', top: '20px', scale: '1.0' }
+        },
+        customButtons: [
+          { id: 'arc_hp', name: 'HP (RB)', type: 'simple', target: 'R', left: 'calc(100% - 90px)', top: '80px', scale: '1.0' },
+          { id: 'arc_hk', name: 'HK (RT)', type: 'simple', target: 'ZR', left: 'calc(100% - 90px)', top: '155px', scale: '1.0' }
+        ]
+      }
+    };
+
+    let profiles = JSON.parse(JSON.stringify(FACTORY_PRESETS));
+
+    function showToast(text, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+      const t = document.createElement('div');
+      t.className = 'toast' + (type === 'error' ? ' toast-error' : '');
+      t.innerHTML = (type === 'error' ? '⚠️ ' : '✅ ') + text;
+      container.appendChild(t);
+      setTimeout(() => t.remove(), 2600);
+    }
+
+    function loadSavedProfiles() {
+      try {
+        const saved = localStorage.getItem('pocket_profiles_v1');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          profiles = { ...JSON.parse(JSON.stringify(FACTORY_PRESETS)), ...parsed };
+        } else {
+          profiles = JSON.parse(JSON.stringify(FACTORY_PRESETS));
+        }
+      } catch (e) {
+        profiles = JSON.parse(JSON.stringify(FACTORY_PRESETS));
+      }
+      if (!profiles[activeProfile]) {
+        activeProfile = 'default';
+      }
+      renderProfileSelect();
+      applyCurrentProfile();
+    }
+
+    function saveProfilesToStorage() {
+      try {
+        localStorage.setItem('pocket_profiles_v1', JSON.stringify(profiles));
+      } catch (e) {
+        console.error('Error guardando perfiles:', e);
+      }
+    }
+
+    // --- MULTIPLAYER Y ASIGNACIÓN DE JUGADOR (P1..P4) ---
+    let currentPlayer = 1;
+    const playerBadge = document.getElementById('playerBadge');
+    const modalPlayer = document.getElementById('modalPlayer');
+
+    function updatePlayerBadge(slot) {
+      currentPlayer = slot;
+      if (playerBadge) {
+        playerBadge.textContent = '🎮 P' + slot;
+        playerBadge.className = 'player-badge player-p' + slot;
+      }
+      document.querySelectorAll('.player-card').forEach(card => {
+        const s = parseInt(card.getAttribute('data-slot'));
+        card.classList.toggle('active', s === slot);
+      });
+    }
+
+    if (playerBadge) {
+      playerBadge.addEventListener('click', () => {
+        modalPlayer.style.display = 'flex';
+      });
+    }
+
+    document.getElementById('btnClosePlayerModal')?.addEventListener('click', () => {
+      modalPlayer.style.display = 'none';
+    });
+    document.getElementById('btnCancelPlayerModal')?.addEventListener('click', () => {
+      modalPlayer.style.display = 'none';
+    });
+
+    document.querySelectorAll('.player-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const slot = parseInt(card.getAttribute('data-slot'));
+        if (slot && ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'change_player', player: slot }));
+        }
+        modalPlayer.style.display = 'none';
+      });
+    });
+
+    // --- WEBSOCKET EN TIEMPO REAL A 60 HZ (0 LAG) ---
+    let ws = null;
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+
+    function connect() {
+      const wsUrl = 'ws://' + window.location.hostname + ':5501';
+      ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        statusDot.classList.add('connected');
+        statusText.textContent = 'Conectado (0 lag)';
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === 'assigned') {
+            updatePlayerBadge(msg.player);
+            showToast(`Conectado como Jugador ${msg.player} (Mando #${msg.player})`);
+            vibrate(30);
+          } else if (msg.type === 'error') {
+            showToast(msg.message || 'Error en servidor', 'error');
+            vibrate(80);
+          }
+        } catch (e) {}
+      };
+
+      ws.onclose = () => {
+        statusDot.classList.remove('connected');
+        statusText.textContent = 'Reconectando...';
+        setTimeout(connect, 1000);
+      };
+
+      ws.onerror = () => ws.close();
+    }
+    connect();
+
+    function sendState() {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          buttons: gamepad.buttons,
+          lx: gamepad.leftStick.x,
+          ly: gamepad.leftStick.y,
+          rx: gamepad.rightStick.x,
+          ry: gamepad.rightStick.y,
+          hatX: gamepad.hat.x,
+          hatY: gamepad.hat.y
+        }));
+      }
+    }
+    setInterval(sendState, 16); // 60 FPS consistentes
+
+    function vibrate(ms = 12) {
+      if (navigator.vibrate) navigator.vibrate(ms);
+    }
+
+    // --- MANEJO DE BOTONES NATIVOS ---
+    document.querySelectorAll('.draggable-group [data-btn]').forEach(el => {
+      el.addEventListener('pointerdown', (e) => {
+        if (isEditMode) return; // En modo edición no emite botones
+        e.preventDefault();
+        el.setPointerCapture(e.pointerId);
+        el.classList.add('active');
+        vibrate(10);
+
+        const btn = el.getAttribute('data-btn');
+        if (['UP', 'DOWN', 'LEFT', 'RIGHT'].includes(btn)) {
+          updateHat(btn, true);
+        } else {
+          gamepad.buttons[btn] = 1;
+        }
+        sendState();
+      });
+
+      const release = (e) => {
+        if (isEditMode) return;
+        e.preventDefault();
+        el.classList.remove('active');
+        const btn = el.getAttribute('data-btn');
+        if (['UP', 'DOWN', 'LEFT', 'RIGHT'].includes(btn)) {
+          updateHat(btn, false);
+        } else {
+          gamepad.buttons[btn] = 0;
+        }
+        sendState();
+      };
+
+      el.addEventListener('pointerup', release);
+      el.addEventListener('pointercancel', release);
+    });
+
+    function updateHat(dir, pressed) {
+      if (dir === 'UP') gamepad.hat.y = pressed ? -1 : 0;
+      if (dir === 'DOWN') gamepad.hat.y = pressed ? 1 : 0;
+      if (dir === 'LEFT') gamepad.hat.x = pressed ? -1 : 0;
+      if (dir === 'RIGHT') gamepad.hat.x = pressed ? 1 : 0;
+    }
+
+    // --- SOPORTE DE BOTONES FÍSICOS DE VOLUMEN (Volumen - = R / Derrape, Volumen + = L / Objeto) ---
+    window.onNativeVolumeKey = function(btn, pressed) {
+      if (gamepad.buttons[btn] !== (pressed ? 1 : 0)) {
+        gamepad.buttons[btn] = pressed ? 1 : 0;
+        sendState();
+        if (pressed) vibrate(15);
+        const el = document.querySelector(`[data-btn="${btn}"]`);
+        if (el) {
+          if (pressed) el.classList.add('active');
+          else el.classList.remove('active');
+        }
+      }
+    };
+
+    window.addEventListener('keydown', (e) => {
+      const code = e.code || e.key;
+      if (code === 'AudioVolumeDown' || code === 'VolumeDown' || e.keyCode === 174 || e.keyCode === 25) {
+        e.preventDefault();
+        window.onNativeVolumeKey('R', true);
+      } else if (code === 'AudioVolumeUp' || code === 'VolumeUp' || e.keyCode === 175 || e.keyCode === 24) {
+        e.preventDefault();
+        window.onNativeVolumeKey('L', true);
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      const code = e.code || e.key;
+      if (code === 'AudioVolumeDown' || code === 'VolumeDown' || e.keyCode === 174 || e.keyCode === 25) {
+        e.preventDefault();
+        window.onNativeVolumeKey('R', false);
+      } else if (code === 'AudioVolumeUp' || code === 'VolumeUp' || e.keyCode === 175 || e.keyCode === 24) {
+        e.preventDefault();
+        window.onNativeVolumeKey('L', false);
+      }
+    });
+
+    // --- STICKS ANALÓGICOS (ROTACIÓN PURA 360° COMPLETA) ---
+    function setupStick(containerId, knobId, isLeft) {
+      const container = document.getElementById(containerId);
+      const knob = document.getElementById(knobId);
+      const maxDist = 48;
+      const saturationDist = 38;
+      let activePointerId = null;
+
+      container.addEventListener('pointerdown', (e) => {
+        if (isEditMode) return;
+        e.preventDefault();
+        activePointerId = e.pointerId;
+        container.setPointerCapture(e.pointerId);
+        moveKnob(e);
+      });
+
+      container.addEventListener('pointermove', (e) => {
+        if (isEditMode) return;
+        if (e.pointerId === activePointerId) {
+          e.preventDefault();
+          moveKnob(e);
+        }
+      });
+
+      const resetKnob = (e) => {
+        if (isEditMode) return;
+        if (e.pointerId === activePointerId) {
+          e.preventDefault();
+          activePointerId = null;
+          knob.style.transform = 'translate(0px, 0px)';
+          if (isLeft) {
+            gamepad.leftStick.x = 0;
+            gamepad.leftStick.y = 0;
+          } else {
+            gamepad.rightStick.x = 0;
+            gamepad.rightStick.y = 0;
+          }
+          sendState();
+        }
+      };
+
+      container.addEventListener('pointerup', resetKnob);
+      container.addEventListener('pointercancel', resetKnob);
+
+      function moveKnob(e) {
+        const rect = container.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+
+        let dx = e.clientX - centerX;
+        let dy = e.clientY - centerY;
+        let dist = Math.hypot(dx, dy);
+
+        let visualDx = dx;
+        let visualDy = dy;
+        if (dist > maxDist) {
+          visualDx = (dx / dist) * maxDist;
+          visualDy = (dy / dist) * maxDist;
+        }
+        knob.style.transform = 'translate(' + visualDx + 'px, ' + visualDy + 'px)';
+
+        const deadzone = 4;
+        if (dist < deadzone) {
+          if (isLeft) { gamepad.leftStick.x = 0; gamepad.leftStick.y = 0; }
+          else { gamepad.rightStick.x = 0; gamepad.rightStick.y = 0; }
+          sendState();
+          return;
+        }
+
+        let power = Math.min(1.0, (dist - deadzone) / (saturationDist - deadzone));
+        let angle = Math.atan2(dy, dx);
+
+        let normX = Math.round(Math.cos(angle) * power * 32767);
+        // Negar seno: en Eden Arriba es positivo (Eje 1+ / Eje 3+), Abajo es negativo (Eje 1- / Eje 3-)
+        let normY = Math.round(-Math.sin(angle) * power * 32767);
+
+        if (isLeft) {
+          gamepad.leftStick.x = normX;
+          gamepad.leftStick.y = normY;
+        } else {
+          gamepad.rightStick.x = normX;
+          gamepad.rightStick.y = normY;
+        }
+        sendState();
+      }
+    }
+
+    setupStick('leftStick', 'leftKnob', true);
+    setupStick('rightStick', 'rightKnob', false);
+
+    // --- MODO EDICIÓN & DRAG AND DROP ---
+    const btnToggleEdit = document.getElementById('btnToggleEdit');
+    const btnAddWidget = document.getElementById('btnAddWidget');
+    const btnResetLayout = document.getElementById('btnResetLayout');
+    const editToolbar = document.getElementById('editToolbar');
+    const scaleSlider = document.getElementById('scaleSlider');
+    const scaleVal = document.getElementById('scaleVal');
+    const btnDeleteSelected = document.getElementById('btnDeleteSelected');
+    const btnDeselect = document.getElementById('btnDeselect');
+
+    const btnUnhideAll = document.getElementById('btnUnhideAll');
+
+    btnToggleEdit.addEventListener('click', () => {
+      isEditMode = !isEditMode;
+      document.body.classList.toggle('edit-mode', isEditMode);
+      stopAllWidgets(); // nada de macros corriendo mientras se edita o se guarda
+      btnToggleEdit.classList.toggle('active', isEditMode);
+      btnToggleEdit.textContent = isEditMode ? '🔒 Guardar Layout' : '🛠️ Modo Edición';
+      btnAddWidget.style.display = isEditMode ? 'flex' : 'none';
+      btnUnhideAll.style.display = isEditMode ? 'flex' : 'none';
+      if (btnResetLayout) btnResetLayout.style.display = isEditMode ? 'flex' : 'none';
+
+      if (!isEditMode) {
+        deselectElement();
+        saveCurrentProfileData();
+        vibrate(20);
+      } else {
+        vibrate(30);
+      }
+    });
+
+    btnUnhideAll.addEventListener('click', () => {
+      document.querySelectorAll('.draggable-group').forEach(el => {
+        el.style.display = '';
+        if (profiles[activeProfile] && profiles[activeProfile].elements[el.id]) {
+          profiles[activeProfile].elements[el.id].hidden = false;
+        }
+      });
+      saveProfilesToStorage();
+      vibrate(20);
+    });
+
+    function selectElement(el) {
+      if (!isEditMode) return;
+      if (selectedElement) selectedElement.classList.remove('selected');
+      selectedElement = el;
+      el.classList.add('selected');
+
+      const isCustom = el.classList.contains('custom-widget');
+      btnDeleteSelected.style.display = 'block';
+      btnDeleteSelected.textContent = isCustom ? '🗑️ Eliminar' : '🗑️ Ocultar / Quitar';
+
+      const currentScale = parseFloat(el.getAttribute('data-scale') || '1.0');
+      scaleSlider.value = Math.round(currentScale * 100);
+      scaleVal.textContent = scaleSlider.value + '%';
+    }
+
+    function deselectElement() {
+      if (selectedElement) {
+        selectedElement.classList.remove('selected');
+        selectedElement = null;
+      }
+    }
+
+    btnDeselect.addEventListener('click', deselectElement);
+
+    scaleSlider.addEventListener('input', () => {
+      if (selectedElement) {
+        const scale = scaleSlider.value / 100;
+        selectedElement.setAttribute('data-scale', scale);
+        scaleVal.textContent = scaleSlider.value + '%';
+        applyElementTransform(selectedElement);
+      }
+    });
+
+    btnDeleteSelected.addEventListener('click', () => {
+      if (!selectedElement) return;
+      if (selectedElement.classList.contains('custom-widget')) {
+        const id = selectedElement.getAttribute('data-widget-id');
+        const prof = profiles[activeProfile];
+        removeWidgetCleanup(id);
+        prof.customButtons = (prof.customButtons || []).filter(b => b.id !== id);
+        selectedElement.remove();
+        deselectElement();
+        saveProfilesToStorage();
+        vibrate(30);
+      } else {
+        selectedElement.style.display = 'none';
+        const prof = profiles[activeProfile];
+        if (prof) {
+          prof.elements[selectedElement.id] = prof.elements[selectedElement.id] || {};
+          prof.elements[selectedElement.id].hidden = true;
+          saveProfilesToStorage();
+        }
+        deselectElement();
+        vibrate(30);
+      }
+    });
+
+    function makeDraggable(el) {
+      let isDragging = false;
+      let startX = 0, startY = 0;
+      let initLeft = 0, initTop = 0;
+
+      el.addEventListener('pointerdown', (e) => {
+        if (!isEditMode) return;
+        e.stopPropagation();
+        e.preventDefault();
+        el.setPointerCapture(e.pointerId);
+        selectElement(el);
+
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+
+        const rect = el.getBoundingClientRect();
+        const canvasRect = document.getElementById('gamepadCanvas').getBoundingClientRect();
+        initLeft = rect.left - canvasRect.left;
+        initTop = rect.top - canvasRect.top;
+
+        el.style.left = initLeft + 'px';
+        el.style.top = initTop + 'px';
+        el.style.right = 'auto';
+        el.style.bottom = 'auto';
+      });
+
+      el.addEventListener('pointermove', (e) => {
+        if (!isEditMode || !isDragging) return;
+        e.preventDefault();
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+
+        let newLeft = Math.max(0, initLeft + dx);
+        let newTop = Math.max(0, initTop + dy);
+
+        el.style.left = newLeft + 'px';
+        el.style.top = newTop + 'px';
+      });
+
+      const stopDrag = (e) => {
+        if (isDragging) {
+          isDragging = false;
+          saveCurrentProfileData();
+        }
+      };
+
+      el.addEventListener('pointerup', stopDrag);
+      el.addEventListener('pointercancel', stopDrag);
+    }
+
+    document.querySelectorAll('.draggable-group').forEach(makeDraggable);
+
+    function applyElementTransform(el) {
+      const scale = el.getAttribute('data-scale') || '1.0';
+      el.style.transform = 'scale(' + scale + ')';
+    }
+
+    // --- GUARDAR Y APLICAR PERFILES ---
+    function saveCurrentProfileData() {
+      const prof = profiles[activeProfile];
+      if (!prof) return;
+
+      document.querySelectorAll('.draggable-group').forEach(el => {
+        const isHidden = (el.style.display === 'none') || (prof.elements[el.id] && prof.elements[el.id].hidden);
+        prof.elements[el.id] = {
+          left: el.style.left,
+          top: el.style.top,
+          right: el.style.right,
+          bottom: el.style.bottom,
+          scale: el.getAttribute('data-scale') || '1.0',
+          hidden: isHidden
+        };
+      });
+
+      (prof.customButtons || []).forEach(btnData => {
+        const el = document.querySelector('[data-widget-id="' + btnData.id + '"]');
+        if (el) {
+          btnData.left = el.style.left;
+          btnData.top = el.style.top;
+          btnData.scale = el.getAttribute('data-scale') || '1.0';
+        }
+      });
+
+      saveProfilesToStorage();
+    }
+
+    function updateLayoutLabels(layoutType) {
+      const btnX = document.querySelector('.btn-x');
+      const btnA = document.querySelector('.btn-a');
+      const btnB = document.querySelector('.btn-b');
+      const btnY = document.querySelector('.btn-y');
+      const shoulderL = document.querySelector('[data-btn="L"]');
+      const shoulderZL = document.querySelector('[data-btn="ZL"]');
+      const shoulderR = document.querySelector('[data-btn="R"]');
+      const shoulderZR = document.querySelector('[data-btn="ZR"]');
+      const menuMinus = document.querySelector('[data-btn="MINUS"]');
+      const menuPlus = document.querySelector('[data-btn="PLUS"]');
+      const menuCapture = document.querySelector('[data-btn="CAPTURE"]');
+      const menuHome = document.querySelector('[data-btn="HOME"]');
+
+      if (layoutType === 'mariokart') {
+        // Mario Kart:
+        // A -> Acelerar (Verde)
+        // B -> Frenar / Reversa / Brake Drift (Rojo)
+        // X -> Mirar Hacia Atrás (Azul)
+        // Y -> Bocina / Acelerar Secundario (Gris)
+        // L / ZL -> Objeto (Amarillo)
+        // R / ZR -> Derrape / Salto (Cyan)
+        // + -> Start / Pausa
+        if (btnX) { btnX.innerHTML = '<span style="font-size:9px;display:block;opacity:0.8;">ATRÁS</span>X'; btnX.setAttribute('data-btn', 'X'); btnX.style.color = '#38bdf8'; btnX.style.borderColor = '#38bdf8'; }
+        if (btnA) { btnA.innerHTML = '<span style="font-size:10px;display:block;font-weight:900;">GAS</span>A'; btnA.setAttribute('data-btn', 'A'); btnA.style.color = '#4ade80'; btnA.style.borderColor = '#4ade80'; }
+        if (btnB) { btnB.innerHTML = '<span style="font-size:9px;display:block;opacity:0.8;">FRENO</span>B'; btnB.setAttribute('data-btn', 'B'); btnB.style.color = '#f87171'; btnB.style.borderColor = '#f87171'; }
+        if (btnY) { btnY.innerHTML = 'Y'; btnY.setAttribute('data-btn', 'Y'); btnY.style.color = '#64748b'; btnY.style.borderColor = '#2e364d'; }
+
+        if (shoulderL) { shoulderL.textContent = '💣 OBJETO (L)'; shoulderL.setAttribute('data-btn', 'L'); shoulderL.style.color = '#fbbf24'; shoulderL.style.borderColor = '#fbbf24'; }
+        if (shoulderZL) { shoulderZL.textContent = '💣 ZL'; shoulderZL.setAttribute('data-btn', 'L'); shoulderZL.style.color = '#fbbf24'; shoulderZL.style.borderColor = '#fbbf24'; }
+
+        if (shoulderR) { shoulderR.textContent = '🏁 DERRAPE (R)'; shoulderR.setAttribute('data-btn', 'R'); shoulderR.style.color = '#38bdf8'; shoulderR.style.borderColor = '#38bdf8'; }
+        if (shoulderZR) { shoulderZR.textContent = '🏁 ZR'; shoulderZR.setAttribute('data-btn', 'R'); shoulderZR.style.color = '#38bdf8'; shoulderZR.style.borderColor = '#38bdf8'; }
+
+        if (menuMinus) menuMinus.style.display = 'none';
+        if (menuCapture) menuCapture.style.display = 'none';
+        if (menuHome) menuHome.style.display = 'none';
+        if (menuPlus) { menuPlus.textContent = 'START ▶'; menuPlus.style.display = 'flex'; }
+      } else if (layoutType === 'xbox') {
+        if (menuMinus) menuMinus.style.display = '';
+        if (menuCapture) menuCapture.style.display = '';
+        if (menuHome) menuHome.style.display = '';
+
+        if (btnX) { btnX.textContent = 'Y'; btnX.setAttribute('data-btn', 'Y'); btnX.style.color = '#fbbf24'; btnX.style.borderColor = ''; }
+        if (btnA) { btnA.textContent = 'B'; btnA.setAttribute('data-btn', 'B'); btnA.style.color = '#f87171'; btnA.style.borderColor = ''; }
+        if (btnB) { btnB.textContent = 'A'; btnB.setAttribute('data-btn', 'A'); btnB.style.color = '#4ade80'; btnB.style.borderColor = ''; }
+        if (btnY) { btnY.textContent = 'X'; btnY.setAttribute('data-btn', 'X'); btnY.style.color = '#60a5fa'; btnY.style.borderColor = ''; }
+        if (shoulderL) { shoulderL.textContent = 'LB'; shoulderL.setAttribute('data-btn', 'L'); shoulderL.style.color = ''; shoulderL.style.borderColor = ''; }
+        if (shoulderZL) { shoulderZL.textContent = 'LT'; shoulderZL.setAttribute('data-btn', 'ZL'); shoulderZL.style.color = ''; shoulderZL.style.borderColor = ''; }
+        if (shoulderR) { shoulderR.textContent = 'RB'; shoulderR.setAttribute('data-btn', 'R'); shoulderR.style.color = ''; shoulderR.style.borderColor = ''; }
+        if (shoulderZR) { shoulderZR.textContent = 'RT'; shoulderZR.setAttribute('data-btn', 'ZR'); shoulderZR.style.color = ''; shoulderZR.style.borderColor = ''; }
+        if (menuMinus) menuMinus.textContent = '⧉';
+        if (menuPlus) { menuPlus.textContent = '☰'; menuPlus.style.display = ''; }
+      } else if (layoutType === 'playstation') {
+        if (menuMinus) menuMinus.style.display = '';
+        if (menuCapture) menuCapture.style.display = '';
+        if (menuHome) menuHome.style.display = '';
+
+        if (btnX) { btnX.textContent = '△'; btnX.setAttribute('data-btn', 'Y'); btnX.style.color = '#34d399'; btnX.style.borderColor = ''; }
+        if (btnA) { btnA.textContent = '○'; btnA.setAttribute('data-btn', 'B'); btnA.style.color = '#f87171'; btnA.style.borderColor = ''; }
+        if (btnB) { btnB.textContent = '✕'; btnB.setAttribute('data-btn', 'A'); btnB.style.color = '#60a5fa'; btnB.style.borderColor = ''; }
+        if (btnY) { btnY.textContent = '□'; btnY.setAttribute('data-btn', 'X'); btnY.style.color = '#f472b6'; btnY.style.borderColor = ''; }
+        if (shoulderL) { shoulderL.textContent = 'L1'; shoulderL.setAttribute('data-btn', 'L'); shoulderL.style.color = ''; shoulderL.style.borderColor = ''; }
+        if (shoulderZL) { shoulderZL.textContent = 'L2'; shoulderZL.setAttribute('data-btn', 'ZL'); shoulderZL.style.color = ''; shoulderZL.style.borderColor = ''; }
+        if (shoulderR) { shoulderR.textContent = 'R1'; shoulderR.setAttribute('data-btn', 'R'); shoulderR.style.color = ''; shoulderR.style.borderColor = ''; }
+        if (shoulderZR) { shoulderZR.textContent = 'R2'; shoulderZR.setAttribute('data-btn', 'ZR'); shoulderZR.style.color = ''; shoulderZR.style.borderColor = ''; }
+        if (menuMinus) menuMinus.textContent = 'Share';
+        if (menuPlus) { menuPlus.textContent = 'Options'; menuPlus.style.display = ''; }
+      } else {
+        // Switch (default)
+        if (menuMinus) menuMinus.style.display = '';
+        if (menuCapture) menuCapture.style.display = '';
+        if (menuHome) menuHome.style.display = '';
+
+        if (btnX) { btnX.textContent = 'X'; btnX.setAttribute('data-btn', 'X'); btnX.style.color = '#cbd5e1'; btnX.style.borderColor = ''; }
+        if (btnA) { btnA.textContent = 'A'; btnA.setAttribute('data-btn', 'A'); btnA.style.color = '#cbd5e1'; btnA.style.borderColor = ''; }
+        if (btnB) { btnB.textContent = 'B'; btnB.setAttribute('data-btn', 'B'); btnB.style.color = '#cbd5e1'; btnB.style.borderColor = ''; }
+        if (btnY) { btnY.textContent = 'Y'; btnY.setAttribute('data-btn', 'Y'); btnY.style.color = '#cbd5e1'; btnY.style.borderColor = ''; }
+        if (shoulderL) { shoulderL.textContent = 'L'; shoulderL.setAttribute('data-btn', 'L'); shoulderL.style.color = ''; shoulderL.style.borderColor = ''; }
+        if (shoulderZL) { shoulderZL.textContent = 'ZL'; shoulderZL.setAttribute('data-btn', 'ZL'); shoulderZL.style.color = ''; shoulderZL.style.borderColor = ''; }
+        if (shoulderR) { shoulderR.textContent = 'R'; shoulderR.setAttribute('data-btn', 'R'); shoulderR.style.color = ''; shoulderR.style.borderColor = ''; }
+        if (shoulderZR) { shoulderZR.textContent = 'ZR'; shoulderZR.setAttribute('data-btn', 'ZR'); shoulderZR.style.color = ''; shoulderZR.style.borderColor = ''; }
+        if (menuMinus) menuMinus.textContent = '-';
+        if (menuPlus) { menuPlus.textContent = '+'; menuPlus.style.display = ''; }
+      }
+    }
+
+    function applyCurrentProfile() {
+      const prof = profiles[activeProfile] || profiles['default'];
+
+      updateLayoutLabels(prof.layoutType || 'switch');
+
+      // Aplicar posiciones y escalas a grupos por defecto
+      document.querySelectorAll('.draggable-group').forEach(el => {
+        const saved = prof.elements && prof.elements[el.id];
+        if (saved) {
+          el.style.left = saved.left || '';
+          el.style.top = saved.top || '';
+          el.style.right = saved.right || '';
+          el.style.bottom = saved.bottom || '';
+          el.setAttribute('data-scale', saved.scale || '1.0');
+          el.style.display = saved.hidden ? 'none' : '';
+        } else {
+          el.removeAttribute('data-scale');
+          el.style.transform = '';
+          el.style.display = '';
+        }
+        applyElementTransform(el);
+      });
+
+      // Renderizar botones personalizados del perfil (primero detener y olviar macros previas)
+      document.querySelectorAll('.custom-widget').forEach(w => {
+        removeWidgetCleanup(w.getAttribute('data-widget-id'));
+        w.remove();
+      });
+      (prof.customButtons || []).forEach(createCustomWidgetDOM);
+
+      // Mostrar u ocultar botón de borrar si el perfil es personalizado
+      const isPreset = ['default', 'preset_mariokart', 'preset_xbox', 'preset_playstation', 'preset_arcade'].includes(activeProfile);
+      const btnDel = document.getElementById('btnDeleteProfile');
+      if (btnDel) {
+        btnDel.style.display = isPreset ? 'none' : 'flex';
+      }
+    }
+
+    if (btnResetLayout) {
+      btnResetLayout.addEventListener('click', () => {
+        if (confirm('¿Restaurar las posiciones y tamaños originales de los controles?')) {
+          profiles[activeProfile].elements = {};
+          saveProfilesToStorage();
+          applyCurrentProfile();
+          showToast('Layout restaurado a los valores de fábrica');
+          vibrate(20);
+        }
+      });
+    }
+
+    // --- GESTIÓN DE PERFILES EN HEADER ---
+    const profileSelect = document.getElementById('profileSelect');
+    const btnNewProfile = document.getElementById('btnNewProfile');
+    const btnExportProfile = document.getElementById('btnExportProfile');
+    const btnImportProfile = document.getElementById('btnImportProfile');
+    const fileImportProfile = document.getElementById('fileImportProfile');
+    const btnDeleteProfile = document.getElementById('btnDeleteProfile');
+
+    function renderProfileSelect() {
+      profileSelect.innerHTML = '';
+      const presetKeys = ['default', 'preset_mariokart', 'preset_xbox', 'preset_playstation', 'preset_arcade'];
+      const customKeys = Object.keys(profiles).filter(k => !presetKeys.includes(k));
+
+      // Grupo Presets
+      const grpPresets = document.createElement('optgroup');
+      grpPresets.label = '⚡ Presets de Consola';
+      presetKeys.forEach(key => {
+        if (profiles[key]) {
+          const opt = document.createElement('option');
+          opt.value = key;
+          opt.textContent = profiles[key].name;
+          if (key === activeProfile) opt.selected = true;
+          grpPresets.appendChild(opt);
+        }
+      });
+      profileSelect.appendChild(grpPresets);
+
+      // Grupo Personalizados si existen
+      if (customKeys.length > 0) {
+        const grpCustom = document.createElement('optgroup');
+        grpCustom.label = '📁 Mis Controles Guardados';
+        customKeys.forEach(key => {
+          const opt = document.createElement('option');
+          opt.value = key;
+          opt.textContent = profiles[key].name;
+          if (key === activeProfile) opt.selected = true;
+          grpCustom.appendChild(opt);
+        });
+        profileSelect.appendChild(grpCustom);
+      }
+    }
+
+    profileSelect.addEventListener('change', () => {
+      activeProfile = profileSelect.value;
+      applyCurrentProfile();
+      showToast(`Perfil cambiado a "${profiles[activeProfile]?.name || activeProfile}"`);
+      vibrate(15);
+    });
+
+    btnNewProfile.addEventListener('click', () => {
+      const name = prompt('Nombre para el nuevo perfil (ej: Zelda BOTW, Mortal Kombat, Forza):');
+      if (name && name.trim()) {
+        const id = 'prof_' + Date.now();
+        profiles[id] = {
+          name: name.trim(),
+          layoutType: profiles[activeProfile]?.layoutType || 'switch',
+          elements: JSON.parse(JSON.stringify(profiles[activeProfile]?.elements || {})),
+          customButtons: JSON.parse(JSON.stringify(profiles[activeProfile]?.customButtons || []))
+        };
+        activeProfile = id;
+        saveProfilesToStorage();
+        renderProfileSelect();
+        applyCurrentProfile();
+        showToast(`Perfil "${name.trim()}" creado y guardado`);
+        vibrate(25);
+      }
+    });
+
+    function processImportedJson(jsonString) {
+      try {
+        const parsed = JSON.parse(jsonString);
+        let targetData = null;
+        let targetName = 'Perfil Importado';
+
+        if (parsed.profile && parsed.profile.elements) {
+          targetData = parsed.profile;
+          targetName = parsed.profile.name || targetName;
+        } else if (parsed.elements) {
+          targetData = parsed;
+          targetName = parsed.name || targetName;
+        } else if (typeof parsed === 'object') {
+          let count = 0;
+          Object.keys(parsed).forEach(k => {
+            if (parsed[k] && (parsed[k].elements || parsed[k].customButtons)) {
+              profiles[k] = parsed[k];
+              activeProfile = k;
+              count++;
+            }
+          });
+          if (count > 0) {
+            saveProfilesToStorage();
+            renderProfileSelect();
+            applyCurrentProfile();
+            showToast(`Se importaron ${count} perfiles correctamente`);
+            vibrate(30);
+            return;
+          }
+        }
+
+        if (!targetData) {
+          throw new Error('Estructura de perfil no válida en el JSON.');
+        }
+
+        const newId = 'prof_' + Date.now();
+        profiles[newId] = {
+          name: targetName + ' (Importado)',
+          layoutType: targetData.layoutType || 'switch',
+          elements: targetData.elements || {},
+          customButtons: targetData.customButtons || []
+        };
+        activeProfile = newId;
+
+        saveProfilesToStorage();
+        renderProfileSelect();
+        applyCurrentProfile();
+        showToast(`Perfil "${targetName}" importado con éxito`);
+        vibrate(30);
+      } catch (err) {
+        alert('Error al importar perfil: ' + err.message);
+      }
+    }
+
+    window.onNativeProfileImported = function(jsonString) {
+      processImportedJson(jsonString);
+    };
+
+    btnExportProfile.addEventListener('click', () => {
+      saveCurrentProfileData();
+      const prof = profiles[activeProfile];
+      if (!prof) return;
+
+      const payload = {
+        app: 'PocketController',
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        profileId: activeProfile,
+        profile: prof
+      };
+
+      const safeName = (prof.name || 'control').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const filename = `pocket_control_${safeName}.json`;
+      const jsonContent = JSON.stringify(payload, null, 2);
+
+      // Si estamos en la APK nativa de Android, usamos el puente nativo para Descargas directas
+      if (window.AndroidBridge && window.AndroidBridge.exportProfile) {
+        window.AndroidBridge.exportProfile(filename, jsonContent);
+        showToast(`Exportando "${prof.name}" a Descargas...`);
+        vibrate(20);
+        return;
+      }
+
+      const jsonStr = "data:text/json;charset=utf-8," + encodeURIComponent(jsonContent);
+      const dlAnchor = document.createElement('a');
+      dlAnchor.setAttribute("href", jsonStr);
+      dlAnchor.setAttribute("download", filename);
+      document.body.appendChild(dlAnchor);
+      dlAnchor.click();
+      dlAnchor.remove();
+
+      showToast(`Perfil "${prof.name}" exportado a archivo`);
+      vibrate(20);
+    });
+
+    btnImportProfile.addEventListener('click', () => {
+      // Si estamos en la APK nativa de Android, invocamos el selector nativo del sistema
+      if (window.AndroidBridge && window.AndroidBridge.importProfile) {
+        window.AndroidBridge.importProfile();
+        return;
+      }
+      fileImportProfile.click();
+    });
+
+    fileImportProfile.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        processImportedJson(evt.target.result);
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    });
+
+    btnDeleteProfile.addEventListener('click', () => {
+      const isPreset = ['default', 'preset_mariokart', 'preset_xbox', 'preset_playstation', 'preset_arcade'].includes(activeProfile);
+      if (isPreset) {
+        alert('Los presets predeterminados no se pueden eliminar.');
+        return;
+      }
+      if (confirm(`¿Eliminar el perfil "${profiles[activeProfile].name}"?`)) {
+        const deletedName = profiles[activeProfile].name;
+        delete profiles[activeProfile];
+        activeProfile = 'default';
+        saveProfilesToStorage();
+        renderProfileSelect();
+        applyCurrentProfile();
+        showToast(`Perfil "${deletedName}" eliminado`);
+        vibrate(20);
+      }
+    });
+
+    // --- CREADOR DE BOTONES Y MACROS (MODAL) ---
+    const modalAdd = document.getElementById('modalAdd');
+    const btnAddWidgetModal = document.getElementById('btnAddWidget');
+    const btnCloseModal = document.getElementById('btnCloseModal');
+    const btnCancelModal = document.getElementById('btnCancelModal');
+    const btnSaveWidget = document.getElementById('btnSaveWidget');
+
+    btnAddWidgetModal.addEventListener('click', () => {
+      openAddModal();
+    });
+
+    btnCloseModal.addEventListener('click', () => modalAdd.style.display = 'none');
+    btnCancelModal.addEventListener('click', () => modalAdd.style.display = 'none');
+
+    let currentTab = 'tab-simple';
+    document.querySelectorAll('.modal-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        tab.classList.add('active');
+        currentTab = tab.getAttribute('data-tab');
+        document.getElementById(currentTab).style.display = 'block';
+      });
+    });
+
+    function populateBtnGrid(gridId, isMulti = false) {
+      const grid = document.getElementById(gridId);
+      grid.innerHTML = '';
+      ALL_BUTTONS.forEach(b => {
+        const btn = document.createElement('div');
+        btn.className = 'choice-btn';
+        btn.textContent = b;
+        btn.setAttribute('data-choice', b);
+        btn.addEventListener('click', () => {
+          if (!isMulti) {
+            grid.querySelectorAll('.choice-btn').forEach(c => c.classList.remove('selected'));
+            btn.classList.add('selected');
+          } else {
+            btn.classList.toggle('selected');
+          }
+        });
+        grid.appendChild(btn);
+      });
+    }
+
+    function openAddModal() {
+      populateBtnGrid('simpleBtnGrid', false);
+      populateBtnGrid('comboBtnGrid', true);
+      populateBtnGrid('turboBtnGrid', false);
+      populateBtnGrid('toggleBtnGrid', false);
+      modalAdd.style.display = 'flex';
+    }
+
+    btnSaveWidget.addEventListener('click', () => {
+      const prof = profiles[activeProfile];
+      const id = 'btn_' + Date.now();
+      let widgetData = null;
+
+      if (currentTab === 'tab-simple') {
+        const name = document.getElementById('simpleName').value.trim() || 'Botón';
+        const selected = document.querySelector('#simpleBtnGrid .choice-btn.selected');
+        if (!selected) { showToast('Selecciona un botón para el macro', 'error'); vibrate(60); return; }
+        widgetData = {
+          id: id, name: name, type: 'simple', target: selected.getAttribute('data-choice'),
+          left: 'calc(50% - 35px)', top: '150px', scale: '1.0'
+        };
+      } else if (currentTab === 'tab-combo') {
+        const name = document.getElementById('comboName').value.trim() || 'Combo';
+        const selected = Array.from(document.querySelectorAll('#comboBtnGrid .choice-btn.selected')).map(c => c.getAttribute('data-choice'));
+        if (selected.length < 2) { showToast('Selecciona al menos 2 botones para el combo', 'error'); vibrate(60); return; }
+        widgetData = {
+          id: id, name: name, type: 'combo', targets: selected,
+          left: 'calc(50% - 35px)', top: '150px', scale: '1.0'
+        };
+      } else if (currentTab === 'tab-turbo') {
+        const name = document.getElementById('turboName').value.trim() || 'Turbo';
+        const selected = document.querySelector('#turboBtnGrid .choice-btn.selected');
+        if (!selected) { showToast('Selecciona un botón para Turbo', 'error'); vibrate(60); return; }
+        const speed = parseInt(document.getElementById('turboSpeed').value, 10);
+        widgetData = {
+          id: id, name: name, type: 'turbo', target: selected.getAttribute('data-choice'), speed: speed,
+          left: 'calc(50% - 35px)', top: '150px', scale: '1.0'
+        };
+      } else if (currentTab === 'tab-toggle') {
+        const name = document.getElementById('toggleName').value.trim() || 'Hold';
+        const selected = document.querySelector('#toggleBtnGrid .choice-btn.selected');
+        if (!selected) { showToast('Selecciona un botón para fijar', 'error'); vibrate(60); return; }
+        widgetData = {
+          id: id, name: name, type: 'toggle', target: selected.getAttribute('data-choice'),
+          left: 'calc(50% - 35px)', top: '150px', scale: '1.0'
+        };
+      }
+
+      if (widgetData) {
+        prof.customButtons = prof.customButtons || [];
+        prof.customButtons.push(widgetData);
+        saveProfilesToStorage();
+        createCustomWidgetDOM(widgetData);
+        modalAdd.style.display = 'none';
+        showToast(`Macro "${widgetData.name}" creado. Sal del Modo Edición para usarlo ✅`);
+        vibrate(30);
+      }
+    });
+
+    // --- RENDER Y EJECUCIÓN DE BOTONES/MACROS EN JUEGO ---
+    function createCustomWidgetDOM(data) {
+      const widget = document.createElement('div');
+      widget.className = 'custom-widget';
+      widget.setAttribute('data-widget-id', data.id);
+      widget.setAttribute('data-scale', data.scale || '1.0');
+      widget.style.left = data.left || '150px';
+      widget.style.top = data.top || '150px';
+      applyElementTransform(widget);
+
+      const btn = document.createElement('div');
+      btn.className = 'custom-btn macro-' + data.type;
+
+      let badge = 'BOTÓN';
+      if (data.type === 'combo') badge = 'COMBO: ' + data.targets.join('+');
+      if (data.type === 'turbo') badge = 'TURBO: ' + data.target;
+      if (data.type === 'toggle') badge = 'HOLD: ' + data.target;
+
+      btn.innerHTML = '<span>' + data.name + '</span><span class="custom-btn-badge">' + badge + '</span>';
+      widget.appendChild(btn);
+
+      // LÓGICA DE EJECUCIÓN EN JUEGO
+      let turboInterval = null;
+      let isToggleActive = false;
+
+      const targetList = data.type === 'combo' ? (data.targets || []) : [data.target];
+
+      const setTargets = (value) => {
+        targetList.forEach(t => { if (t) gamepad.buttons[t] = value; });
+      };
+
+      // Detiene la macro y libera todos los botones que controla (nunca deja nada trabado)
+      const stopWidget = () => {
+        if (turboInterval) { clearInterval(turboInterval); turboInterval = null; }
+        if (data.type !== 'toggle' || isToggleActive) setTargets(0);
+        isToggleActive = false;
+        btn.classList.remove('active');
+      };
+      WIDGET_CLEANUPS[data.id] = stopWidget;
+
+      btn.addEventListener('pointerdown', (e) => {
+        if (isEditMode) return;
+        e.preventDefault();
+        try { btn.setPointerCapture(e.pointerId); } catch (err) {}
+        vibrate(12);
+
+        if (data.type === 'toggle') {
+          isToggleActive = !isToggleActive;
+          btn.classList.toggle('active', isToggleActive);
+          setTargets(isToggleActive ? 1 : 0);
+          sendState();
+          return;
+        }
+
+        btn.classList.add('active');
+        setTargets(1);
+        sendState();
+
+        if (data.type === 'turbo') {
+          if (turboInterval) clearInterval(turboInterval);
+          let state = true;
+          const speed = Math.max(30, parseInt(data.speed, 10) || 50);
+          turboInterval = setInterval(() => {
+            state = !state;
+            gamepad.buttons[data.target] = state ? 1 : 0;
+            sendState();
+          }, speed);
+        }
+      });
+
+      const releaseCustom = (e) => {
+        if (isEditMode) return;
+        if (e && e.preventDefault) e.preventDefault();
+        if (data.type === 'toggle') return; // El hold se enciende/apaga con toques
+        if (turboInterval) { clearInterval(turboInterval); turboInterval = null; }
+        btn.classList.remove('active');
+        setTargets(0);
+        sendState();
+      };
+
+      btn.addEventListener('pointerup', releaseCustom);
+      btn.addEventListener('pointercancel', releaseCustom);
+      btn.addEventListener('lostpointercapture', releaseCustom);
+
+      makeDraggable(widget);
+      document.getElementById('gamepadCanvas').appendChild(widget);
+    }
+
+    // PANTALLA COMPLETA
+    document.getElementById('btnFullscreen').addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    });
+
+    // ESCANEAR CÓDIGO QR / CAMBIAR SERVIDOR
+    const btnScanQr = document.getElementById('btnScanQr');
+    if (btnScanQr) {
+      btnScanQr.addEventListener('click', () => {
+        if (window.AndroidBridge && window.AndroidBridge.openScanner) {
+          window.AndroidBridge.openScanner();
+        } else {
+          const newUrl = prompt('Ingresa la URL o IP del servidor PocketController:', window.location.origin);
+          if (newUrl && newUrl.trim()) {
+            let target = newUrl.trim();
+            if (!target.startsWith('http://') && !target.startsWith('https://')) target = 'http://' + target;
+            window.location.href = target;
+          }
+        }
+      });
+    }
+
+    // Iniciar perfiles
+    loadSavedProfiles();
+  </script>
+</body>
+</html>
